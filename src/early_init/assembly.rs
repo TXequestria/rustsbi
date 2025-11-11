@@ -46,6 +46,16 @@ macro_rules! clear_mdt {
 
 static mut MEMORY_INIT_UNDONE: bool = true;
 
+/*
+ * partially referenced opensbi/firmware/fw_base.S
+ * SPDX-License-Identifier: BSD-2-Clause
+ *
+ * Copyright (c) 2019 Western Digital Corporation or its affiliates.
+ *
+ * Authors:
+ *   Anup Patel <anup.patel@wdc.com>
+ */
+
 #[unsafe(naked)]
 #[unsafe(export_name = "_start")]
 #[allow(named_asm_labels)]
