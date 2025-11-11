@@ -1,0 +1,10 @@
+[firmware]
+jump-address = 0x80200000
+
+[link]
+link-address = 0x8000_0000
+payload-offset = 0x200000
+payload-align = 0x1000
+
+[platform]
+stack-size = 8192

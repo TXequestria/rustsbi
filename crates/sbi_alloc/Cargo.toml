@@ -1,0 +1,11 @@
+[package]
+name = "sbi_alloc"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+thiserror-no-std = "2.0.2"
+
+[lib]
+test = false
+bench = false

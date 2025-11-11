@@ -1,0 +1,12 @@
+[package]
+name = "bump_alloc"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sbi_alloc = { version = "0.1.0", path = "../sbi_alloc" }
+sbi_config = { version = "0.1.0", path = "../sbi_config" }
+
+[lib]
+test = false
+bench = false

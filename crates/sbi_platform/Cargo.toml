@@ -1,0 +1,12 @@
+[package]
+name = "sbi_platform"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sbi_config = { version = "0.1.0", path = "../sbi_config" }
+sbi_trap = { version = "0.1.0", path = "../sbi_trap" }
+
+[lib]
+test = false
+bench = false

@@ -1,0 +1,18 @@
+[package]
+name = "sbi_firmware"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sbi_config = { version = "0.1.0", path = "../sbi_config" }
+
+
+[lib]
+test = false
+bench = false
+
+[features]
+dynamic = []
+jump = []
+payload = []
+default = ["dynamic"]

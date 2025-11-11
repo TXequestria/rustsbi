@@ -1,0 +1,31 @@
+[package]
+name = "rustsbi"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bump_alloc = { version = "0.1.0", path = "crates/bump_alloc" }
+sbi_alloc = { version = "0.1.0", path = "crates/sbi_alloc" }
+sbi_config = { version = "0.1.0", path = "crates/sbi_config" }
+sbi_firmware = { version = "0.1.0", path = "crates/sbi_firmware" }
+sbi_platform = { version = "0.1.0", path = "crates/sbi_platform" }
+sbi_trap = { version = "0.1.0", path = "crates/sbi_trap" }
+serial = { version = "0.1.0", path = "crates/serial" }
+
+[build-dependencies]
+sbi_config = {version = "0.1.0",path = "crates/sbi_config"}
+
+[[bin]]
+name = "rustsbi"
+test = false
+bench = false
+
+[workspace]
+members = ["crates/*"]
+
+[features]
+default = ["dynamic"]
+dynamic = ["sbi_firmware/dynamic"]
+jump = ["sbi_firmware/jump"]
+payload = ["sbi_firmware/payload"]
+
