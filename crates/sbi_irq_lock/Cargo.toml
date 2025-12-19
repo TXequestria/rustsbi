@@ -1,5 +1,5 @@
 [package]
-name = "sbi_lock"
+name = "sbi_irq_lock"
 version = "0.1.0"
 edition = "2024"
 

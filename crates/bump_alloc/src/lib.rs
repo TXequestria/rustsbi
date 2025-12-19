@@ -1,4 +1,6 @@
+//! a simple lock-free, atomic bump allocator
 #![no_std]
+#![deny(missing_docs)]
 
 use core::{
     cell::UnsafeCell,
@@ -7,6 +9,7 @@ use core::{
     num::NonZeroUsize,
     ptr::NonNull,
     sync::atomic::{AtomicUsize, Ordering},
+    option::Option
 };
 
 use sbi_alloc::{layout::NonZeroLayout, traits::SbiAlloc};
@@ -16,6 +19,9 @@ const CURSOR_MASK: usize = (1 << COUNTER_SHIFT) - 1;
 const COUNTER_SHIFT: usize = (usize::BITS / 2 + 1) as _;
 const MAX_COUNTER: usize = (1 << (usize::BITS / 2 - 1)) - 1;
 
+/// The atomic bump allocator managing the space between start and end.
+/// 
+/// It uses an atomic tagged pointer to record current offset in usize and an allocation counter
 pub struct BumpAlloc {
     start: NonNull<()>,
     end: NonNull<()>,
@@ -206,13 +212,24 @@ unsafe impl SbiAlloc for BumpAlloc {
     }
 }
 
+/// Debug information for BumpAllocator
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DebugInfo {
+    /// counter: how many living (unfreed) allocations are there
     pub counter: usize,
+    /// cursor : the current cursor of how many `usize` are allocated from `start`
     pub cursor: usize,
 }
 
 impl BumpAlloc {
+    /// creates a new `BumpAllocator` managing the space between `start_addr` and `end_addr`.
+    ///
+    /// if start is not `usize` aligned, it will be rounded up to the nearest address that is `usize` aligned
+    /// if `end_addr` <= start addr, then all allocations will return null
+    /// if `start_addr` is 0, then None is returned since we cannot allocate spaces containing null pointer
+    /// # Safety:
+    /// - caller must ensure: `start_addr` and `end_addr` are nonzero and `usize` aligned
+    /// - the memory region between `start_addr` and `end_addr` are unallocated and exclusively owned
     #[inline]
     pub const unsafe fn new(start_addr: usize, end_addr: usize) -> Option<Self> {
         let start_addr = (start_addr + align_of::<usize>() - 1) & !(align_of::<usize>() - 1);
@@ -232,6 +249,7 @@ impl BumpAlloc {
             _marker: PhantomData,
         })
     }
+    /// atomically load the cursor-and-counter usize and produce debug info
     #[inline]
     pub fn debug_info(&self) -> DebugInfo {
         let val = self.pos_and_count.load(Ordering::Acquire);

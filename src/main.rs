@@ -1,45 +1,33 @@
 #![no_std]
 #![no_main]
 
-use bump_alloc::BumpAlloc;
-use core::arch::asm;
 extern crate alloc;
-use core::mem::MaybeUninit;
-mod early_init;
-mod trap_handler;
-use core::usize;
 
+mod early_init;
+mod sbi_init;
+mod trap_handler;
+mod serial;
+use core::sync::atomic::{AtomicU32, Ordering};
 #[panic_handler]
 fn panic_handler(_: &core::panic::PanicInfo) -> ! {
     loop {
-        unsafe { asm!("wfi", options(nomem, nostack, preserves_flags)) };
+        asm_wrapper::wfi();
     }
 }
 
-static mut BUMP_ALLOCATOR: MaybeUninit<BumpAlloc> = MaybeUninit::zeroed();
+unsafe extern "C" fn main() -> ! {
 
-unsafe extern "C" fn main() {
-    let hartid = unsafe {
-        let hartid: usize;
-        asm!(
-            "csrr {hartid},mhartid",
-            hartid = out(reg) hartid,
-            options(nomem, nostack, preserves_flags)
-        );
-        hartid
-    };
-    if hartid != 0 {
-        loop {
-            unsafe { asm!("wfi", options(nomem, nostack, preserves_flags)) }
+    let hartid = asm_wrapper::hartid();
+
+    let mut guard = loop {
+        if let Ok(g) = serial::SERIAL.try_lock() {
+            break g;
         }
-    }
-    use serial::{Write, uart16550::Builder};
-    let mut serial = unsafe { Builder::new().build() };
-    for byte in "Hello World!".bytes() {
-        let _ = serial.write(byte);
-        let _ = serial.flush();
-    }
-    loop {
-        unsafe { asm!("wfi", options(nomem, nostack, preserves_flags)) }
-    }
+    };
+    use core::fmt::Write;
+    let _ = write!(guard,"Hello from hart {hartid}\n");
+    drop(guard);
+    loop {}
 }
+
+

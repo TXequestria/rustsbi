@@ -1,7 +1,6 @@
-use crate::ptr_with_priv::*;
+use crate::{nb, ptr_with_priv::*, traits};
 use core::num::NonZeroUsize;
 use core::ptr::NonNull;
-use embedded_hal_nb::{nb, serial};
 pub struct NS16550 {
     base_addr: NonNull<u8>,
     buffer: [u8; 16],
@@ -103,6 +102,13 @@ pub enum SerialError {
     BreakInt { overrun: bool },
 }
 
+impl From<SerialError> for core::fmt::Error {
+    #[inline]
+    fn from(_: SerialError) -> Self {
+        Self
+    }
+}
+
 impl SerialError {
     #[inline(always)]
     const fn from_lsr(lsr: u8) -> Option<Self> {
@@ -133,9 +139,10 @@ impl SerialError {
 
 impl core::error::Error for SerialError {}
 
-impl serial::Error for SerialError {
-    fn kind(&self) -> serial::ErrorKind {
-        use serial::ErrorKind;
+use embedded_hal_nb::serial::{self as hal_serial, Write};
+impl hal_serial::Error for SerialError {
+    fn kind(&self) -> hal_serial::ErrorKind {
+        use hal_serial::ErrorKind;
         match self {
             Self::Overrun => ErrorKind::Overrun,
             Self::BreakInt { overrun: _ } => ErrorKind::Other,
@@ -145,7 +152,7 @@ impl serial::Error for SerialError {
     }
 }
 
-impl serial::ErrorType for NS16550 {
+impl hal_serial::ErrorType for NS16550 {
     type Error = SerialError;
 }
 
@@ -197,8 +204,9 @@ impl Drop for NS16550 {
     }
 }
 
-impl serial::Read for NS16550 {
-    fn read(&mut self) -> nb::Result<u8, Self::Error> {
+impl traits::Read for NS16550 {
+    #[inline]
+    fn read(&mut self) -> nb::Result<u8, SerialError> {
         use nb::Error;
         let lsr = unsafe { self.lsr().read_volatile() };
         // no data available
@@ -212,27 +220,34 @@ impl serial::Read for NS16550 {
                     self.thr().read_volatile();
                 }
             }
-            return Err(Error::Other(error));
+            Err(Error::Other(error))
+        } else {
+            let byte = unsafe { self.thr().read_volatile() };
+            Ok(byte)
         }
-        let byte = unsafe { self.thr().read_volatile() };
-        Ok(byte)
     }
 }
 
-impl serial::Write for NS16550 {
-    fn write(&mut self, word: u8) -> nb::Result<(), Self::Error> {
-        if self.buf_len < 16 {
-            self.buffer[self.buf_len as usize] = word;
+impl traits::Write for NS16550 {
+    #[inline]
+    fn write(&mut self, word: u8) -> nb::Result<(), SerialError> {
+        let len = self.buf_len as usize;
+        if len < 16 {
+            self.buffer[len] = word;
             self.buf_len += 1;
-            return Ok(());
+        } else {
+            self.flush()?;
+            self.buffer[0] = word;
+            self.buf_len = 1;
         }
-        self.flush()?;
-        self.buffer[0] = word;
-        self.buf_len = 1;
         Ok(())
     }
-    fn flush(&mut self) -> nb::Result<(), Self::Error> {
+    #[inline]
+    fn flush(&mut self) -> nb::Result<(), SerialError> {
         use nb::Error;
+        if self.buf_len == 0 {
+            return Ok(());
+        }
         let lsr = unsafe { self.lsr().read_volatile() };
         // has received data
         if (lsr & 1) > 0 {
@@ -251,12 +266,29 @@ impl serial::Write for NS16550 {
             return Err(Error::WouldBlock);
         }
         let thr = self.thr();
-        for i in 0..self.buf_len {
+        let len = self.buf_len as usize;
+        for (index, byte) in self.buffer.iter().enumerate() {
+            if index >= len {
+                break;
+            }
             unsafe {
-                thr.write_volatile(self.buffer[i as usize]);
+                thr.write_volatile(*byte);
             }
         }
         self.buf_len = 0;
+        Ok(())
+    }
+}
+
+unsafe impl Sync for NS16550 {}
+unsafe impl Send for NS16550 {}
+
+impl core::fmt::Write for NS16550 {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        for byte in s.as_bytes() {
+            nb::block!(self.write(*byte))?;
+        }
+        nb::block!(self.flush())?;
         Ok(())
     }
 }

@@ -4,10 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+asm_wrapper = { version = "0.1.0", path = "crates/asm_wrapper" }
 bump_alloc = { version = "0.1.0", path = "crates/bump_alloc" }
 sbi_alloc = { version = "0.1.0", path = "crates/sbi_alloc" }
 sbi_config = { version = "0.1.0", path = "crates/sbi_config" }
 sbi_firmware = { version = "0.1.0", path = "crates/sbi_firmware" }
+sbi_irq_lock = { version = "0.1.0", path = "crates/sbi_irq_lock" }
 sbi_platform = { version = "0.1.0", path = "crates/sbi_platform" }
 sbi_trap = { version = "0.1.0", path = "crates/sbi_trap" }
 serial = { version = "0.1.0", path = "crates/serial" }

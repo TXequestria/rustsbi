@@ -109,19 +109,19 @@ impl core::fmt::Debug for TrapFrame {
 
 impl TrapFrame {
     #[inline(always)]
-    pub fn set_a0(self: Pin<&mut Self>, a0:usize) {
+    pub const fn set_a0(self: Pin<&mut Self>, a0:usize) {
         unsafe { self.get_unchecked_mut().a0 = a0}
     }
     #[inline(always)]
-    pub fn set_a1(self: Pin<&mut Self>, a1:usize) {
+    pub const fn set_a1(self: Pin<&mut Self>, a1:usize) {
         unsafe { self.get_unchecked_mut().a1 = a1}
     }
     #[inline(always)]
-    pub fn set_mepc(self: Pin<&mut Self>, mepc:usize) {
+    pub const fn set_mepc(self: Pin<&mut Self>, mepc:usize) {
         unsafe { self.get_unchecked_mut().mepc = mepc}
     }
     #[inline(always)]
-    pub fn set_mstatus(self: Pin<&mut Self>, mstatus:u64) {
+    pub const fn set_mstatus(self: Pin<&mut Self>, mstatus:u64) {
         let this = unsafe {self.get_unchecked_mut()};
         // we need to set mdt because when returning
         // if a trap happened during restoring csr, 
@@ -146,59 +146,59 @@ impl TrapFrame {
 // read-only fields
 impl TrapFrame {
     #[inline(always)]
-    pub fn a0(&self) -> usize {
+    pub const fn a0(&self) -> usize {
         self.a0
     }
     #[inline(always)]
-    pub fn a1(&self) -> usize {
+    pub const fn a1(&self) -> usize {
         self.a1
     }
     #[inline(always)]
-    pub fn a2(&self) -> usize {
+    pub const fn a2(&self) -> usize {
         self.a2
     }
     #[inline(always)]
-    pub fn a3(&self) -> usize {
+    pub const fn a3(&self) -> usize {
         self.a3
     }
     #[inline(always)]
-    pub fn a4(&self) -> usize {
+    pub const fn a4(&self) -> usize {
         self.a4
     }
     #[inline(always)]
-    pub fn a5(&self) -> usize {
+    pub const fn a5(&self) -> usize {
         self.a5
     }
     #[inline(always)]
-    pub fn a6(&self) -> usize {
+    pub const fn a6(&self) -> usize {
         self.a6
     }
     #[inline(always)]
-    pub fn a7(&self) -> usize {
+    pub const fn a7(&self) -> usize {
         self.a7
     }
     #[inline(always)]
-    pub fn mepc(&self) -> usize {
+    pub const fn mepc(&self) -> usize {
         self.mepc
     }
     #[inline(always)]
-    pub fn mcause(&self) -> usize {
+    pub const fn mcause(&self) -> usize {
         self.mcause
     }
     #[inline(always)]
-    pub fn mtinst(&self) -> usize {
+    pub const fn mtinst(&self) -> usize {
         self.mtinst
     }
     #[inline(always)]
-    pub fn mtval(&self) -> usize {
+    pub const fn mtval(&self) -> usize {
         self.mtval
     }
     #[inline(always)]
-    pub fn mtval2(&self) -> usize {
+    pub const fn mtval2(&self) -> usize {
         self.mtval2
     }
     #[inline(always)]
-    pub fn mstatus(&self) -> u64 {
+    pub const fn mstatus(&self) -> u64 {
         #[cfg(target_arch = "riscv64")]
         return self.mstatus as u64;
         #[cfg(target_arch = "riscv32")]

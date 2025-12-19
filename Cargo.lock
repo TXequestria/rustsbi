@@ -3,6 +3,10 @@
 version = 4
 
 [[package]]
+name = "asm_wrapper"
+version = "0.1.0"
+
+[[package]]
 name = "bump_alloc"
 version = "0.1.0"
 dependencies = [
@@ -95,10 +99,12 @@ dependencies = [
 name = "rustsbi"
 version = "0.1.0"
 dependencies = [
+ "asm_wrapper",
  "bump_alloc",
  "sbi_alloc",
  "sbi_config",
  "sbi_firmware",
+ "sbi_irq_lock",
  "sbi_platform",
  "sbi_trap",
  "serial",
@@ -126,7 +132,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "sbi_lock"
+name = "sbi_irq_lock"
 version = "0.1.0"
 dependencies = [
  "nb",

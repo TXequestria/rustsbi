@@ -86,6 +86,7 @@ impl NonZeroLayout {
     #[inline(always)]
     pub const fn padding_size(&self) -> usize {
         let size = self.size();
+        // safety: align is NonZero, so sub 1 will not overflow
         let mask = unsafe {
             self.align().unchecked_sub(1)
         };
