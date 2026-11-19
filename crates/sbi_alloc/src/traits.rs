@@ -23,7 +23,7 @@ pub unsafe trait SbiAlloc: Sync {
             let new_layout = layout.with_size_unchecked(new_size);
             let new_ptr = self.alloc(new_layout)?;
             // ptr is not deallocated, so not overlapping!
-            new_ptr.copy_from_nonoverlapping(ptr, layout.size());
+            new_ptr.copy_from_nonoverlapping(ptr, layout.size().min(new_layout.size()));
             self.dealloc(ptr, layout);
             Some(new_ptr)
         }
